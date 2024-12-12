@@ -1,2814 +1,695 @@
-openapi: 3.0.1
+swagger: '2.0'
 info:
-  title: Rapyd Cloud Link API
-  description: Connecting applications to POS devices
-  version: v1
-servers:
-- url: /CloudLinkApi
-security:
-- ApiKey: []
+  description: 'This is a sample server Petstore server. For this sample, you can use the api key `special-key` to test the authorization filters.'
+  version: 1.0.0
+  title: OpenAPI Petstore
+  license:
+    name: Apache-2.0
+    url: 'https://www.apache.org/licenses/LICENSE-2.0.html'
+host: petstore.swagger.io
+basePath: /v2
 tags:
-- name: Activation
-  description: Terminal activation using webhooks for terminal responses.
-- name: ActivationPoll
-  description: Terminal activation using poll for retrieving terminal responses.
-- name: CloudLink
-  description: Transaction flow using webhooks for terminal responses.
-- name: CloudLinkPoll
-  description: Transaction flow using poll for retrieving terminal responses.
+  - name: pet
+    description: Everything about your Pets
+  - name: store
+    description: Access to Petstore orders
+  - name: user
+    description: Operations about user
+schemes:
+  - http
 paths:
-  /register:
+  /pet:
     post:
       tags:
-      - Activation
-      summary: "Register the serial number of a PAX device and a callback url for\
-        \ the webhook which will be called when the PAX device pair's against Cloudlink.\r\
-        \nThe registration will be active for one hour. If that time passes without\
-        \ the pairing process in the terminal being activated, the terminal must be\
-        \ re-registered."
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Register'
-            example:
-              serialNumber: "0822170138"
-              pairingCallback: http://example.com/webhook-endpoint
-          text/json:
-            schema:
-              $ref: '#/components/schemas/Register'
-            example:
-              serialNumber: "0822170138"
-              pairingCallback: http://example.com/webhook-endpoint
-          application/*+json:
-            schema:
-              $ref: '#/components/schemas/Register'
-            example:
-              serialNumber: "0822170138"
-              pairingCallback: http://example.com/webhook-endpoint
+        - pet
+      summary: Add a new pet to the store
+      description: ''
+      operationId: addPet
+      consumes:
+        - application/json
+        - application/xml
+      produces:
+        - application/xml
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          description: Pet object that needs to be added to the store
+          required: true
+          schema:
+            $ref: '#/definitions/Pet'
       responses:
-        "202":
-          description: Accepted
-        "401":
-          description: Unauthorized
-          content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
-              example:
-                message: Unauthorized
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
-              example:
-                message: Unauthorized
-            text/json:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
-              example:
-                message: Unauthorized
-        "500":
-          description: Server Error
-  /poll/register:
-    post:
+        '405':
+          description: Invalid input
+      security:
+        - petstore_auth:
+            - 'write:pets'
+            - 'read:pets'
+    put:
       tags:
-      - ActivationPoll
-      summary: "Register the serial number of a PAX device. \r\nThe registration will\
-        \ be active for one hour. If that time passes without the pairing process\
-        \ in the terminal being activated, the terminal must be re-registered."
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/RegisterUsingPoll'
-            example:
-              serialNumber: "0822170138"
-          text/json:
-            schema:
-              $ref: '#/components/schemas/RegisterUsingPoll'
-            example:
-              serialNumber: "0822170138"
-          application/*+json:
-            schema:
-              $ref: '#/components/schemas/RegisterUsingPoll'
-            example:
-              serialNumber: "0822170138"
+        - pet
+      summary: Update an existing pet
+      description: ''
+      operationId: updatePet
+      consumes:
+        - application/json
+        - application/xml
+      produces:
+        - application/xml
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          description: Pet object that needs to be added to the store
+          required: true
+          schema:
+            $ref: '#/definitions/Pet'
       responses:
-        "202":
-          description: Accepted
-        "401":
-          description: Unauthorized
-          content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
-              example:
-                message: Unauthorized
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
-              example:
-                message: Unauthorized
-            text/json:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
-              example:
-                message: Unauthorized
-        "500":
-          description: Server Error
-  /poll/devicetoken/{serialNumber}:
+        '400':
+          description: Invalid ID supplied
+        '404':
+          description: Pet not found
+        '405':
+          description: Validation exception
+      security:
+        - petstore_auth:
+            - 'write:pets'
+            - 'read:pets'
+  /pet/findByStatus:
     get:
       tags:
-      - ActivationPoll
-      summary: "Check if the terminal as paired it's device token to the serial number.\r\
-        \nNote! This method is rate limited to one call per second per serial number."
+        - pet
+      summary: Finds Pets by status
+      description: Multiple status values can be provided with comma separated strings
+      operationId: findPetsByStatus
+      produces:
+        - application/xml
+        - application/json
       parameters:
-      - name: serialNumber
-        in: path
-        description: The serial number of the POS device
-        required: true
-        style: simple
-        explode: false
-        schema:
-          type: string
+        - name: status
+          in: query
+          description: Status values that need to be considered for filter
+          required: true
+          type: array
+          items:
+            type: string
+            enum:
+              - available
+              - pending
+              - sold
+            default: available
+          collectionFormat: csv
       responses:
-        "202":
-          description: Accepted
-        "401":
-          description: Unauthorized
-          content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
-              example:
-                message: Unauthorized
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
-              example:
-                message: Unauthorized
-            text/json:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
-              example:
-                message: Unauthorized
-        "429":
-          description: Too Many Requests
-        "500":
-          description: Server Error
-  /sale:
-    post:
-      tags:
-      - CloudLink
-      summary: Send a request to display a sale on a PAX POS device
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Request'
-            example:
-              amount: "100"
-              disablePrinting: true
-              referenceId: merchant-ref-number-abc123
-              language: en_GB
-              voucherCode: "200001"
-              whitelistAids:
-              - AIDNAME1
-              - AIDNAME2
-              whitelistBins:
-              - BIN1
-              - BIN2
-              callbackUrl: http://example.com/webhook-endpoint
-              deviceToken: b16526c3447ba6cea4818d
-              correlationId: 5d1d4ea-8229-44d7-b517-26a5ae6c2fda
-              timeToLive: 5
-          text/json:
-            schema:
-              $ref: '#/components/schemas/Request'
-            example:
-              amount: "100"
-              disablePrinting: true
-              referenceId: merchant-ref-number-abc123
-              language: en_GB
-              voucherCode: "200001"
-              whitelistAids:
-              - AIDNAME1
-              - AIDNAME2
-              whitelistBins:
-              - BIN1
-              - BIN2
-              callbackUrl: http://example.com/webhook-endpoint
-              deviceToken: b16526c3447ba6cea4818d
-              correlationId: 5d1d4ea-8229-44d7-b517-26a5ae6c2fda
-              timeToLive: 5
-          application/*+json:
-            schema:
-              $ref: '#/components/schemas/Request'
-            example:
-              amount: "100"
-              disablePrinting: true
-              referenceId: merchant-ref-number-abc123
-              language: en_GB
-              voucherCode: "200001"
-              whitelistAids:
-              - AIDNAME1
-              - AIDNAME2
-              whitelistBins:
-              - BIN1
-              - BIN2
-              callbackUrl: http://example.com/webhook-endpoint
-              deviceToken: b16526c3447ba6cea4818d
-              correlationId: 5d1d4ea-8229-44d7-b517-26a5ae6c2fda
-              timeToLive: 5
-      responses:
-        "202":
-          description: Accepted
-        "400":
-          description: Bad Request
-          content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
-              example:
-                type: https://tools.ietf.org/html/rfc7231#section-6.5.1
-                title: Bad Request
-                status: 400
-                detail: DeviceId not registered
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
-              example:
-                type: https://tools.ietf.org/html/rfc7231#section-6.5.1
-                title: Bad Request
-                status: 400
-                detail: DeviceId not registered
-            text/json:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
-              example:
-                type: https://tools.ietf.org/html/rfc7231#section-6.5.1
-                title: Bad Request
-                status: 400
-                detail: DeviceId not registered
-        "401":
-          description: Unauthorized
-          content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
-              example:
-                message: Unauthorized
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
-              example:
-                message: Unauthorized
-            text/json:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
-              example:
-                message: Unauthorized
-        "500":
-          description: Server Error
-  /preauth:
-    post:
-      tags:
-      - CloudLink
-      summary: Send a request to display a pre-authorization on a PAX POS device
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Request'
-            example:
-              amount: "100"
-              disablePrinting: true
-              referenceId: merchant-ref-number-abc123
-              language: en_GB
-              voucherCode: "200001"
-              whitelistAids:
-              - AIDNAME1
-              - AIDNAME2
-              whitelistBins:
-              - BIN1
-              - BIN2
-              callbackUrl: http://example.com/webhook-endpoint
-              deviceToken: b16526c3447ba6cea4818d
-              correlationId: 5d1d4ea-8229-44d7-b517-26a5ae6c2fda
-              timeToLive: 5
-          text/json:
-            schema:
-              $ref: '#/components/schemas/Request'
-            example:
-              amount: "100"
-              disablePrinting: true
-              referenceId: merchant-ref-number-abc123
-              language: en_GB
-              voucherCode: "200001"
-              whitelistAids:
-              - AIDNAME1
-              - AIDNAME2
-              whitelistBins:
-              - BIN1
-              - BIN2
-              callbackUrl: http://example.com/webhook-endpoint
-              deviceToken: b16526c3447ba6cea4818d
-              correlationId: 5d1d4ea-8229-44d7-b517-26a5ae6c2fda
-              timeToLive: 5
-          application/*+json:
-            schema:
-              $ref: '#/components/schemas/Request'
-            example:
-              amount: "100"
-              disablePrinting: true
-              referenceId: merchant-ref-number-abc123
-              language: en_GB
-              voucherCode: "200001"
-              whitelistAids:
-              - AIDNAME1
-              - AIDNAME2
-              whitelistBins:
-              - BIN1
-              - BIN2
-              callbackUrl: http://example.com/webhook-endpoint
-              deviceToken: b16526c3447ba6cea4818d
-              correlationId: 5d1d4ea-8229-44d7-b517-26a5ae6c2fda
-              timeToLive: 5
-      responses:
-        "202":
-          description: Accepted
-        "400":
-          description: Bad Request
-          content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
-              example:
-                type: https://tools.ietf.org/html/rfc7231#section-6.5.1
-                title: Bad Request
-                status: 400
-                detail: DeviceId not registered
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
-              example:
-                type: https://tools.ietf.org/html/rfc7231#section-6.5.1
-                title: Bad Request
-                status: 400
-                detail: DeviceId not registered
-            text/json:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
-              example:
-                type: https://tools.ietf.org/html/rfc7231#section-6.5.1
-                title: Bad Request
-                status: 400
-                detail: DeviceId not registered
-        "401":
-          description: Unauthorized
-          content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
-              example:
-                message: Unauthorized
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
-              example:
-                message: Unauthorized
-            text/json:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
-              example:
-                message: Unauthorized
-        "500":
-          description: Server Error
-  /refund:
-    post:
-      tags:
-      - CloudLink
-      summary: Send a request to display a refund on a PAX POS device
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Request'
-            example:
-              amount: "100"
-              disablePrinting: true
-              referenceId: merchant-ref-number-abc123
-              language: en_GB
-              voucherCode: "200001"
-              whitelistAids:
-              - AIDNAME1
-              - AIDNAME2
-              whitelistBins:
-              - BIN1
-              - BIN2
-              callbackUrl: http://example.com/webhook-endpoint
-              deviceToken: b16526c3447ba6cea4818d
-              correlationId: 5d1d4ea-8229-44d7-b517-26a5ae6c2fda
-              timeToLive: 5
-          text/json:
-            schema:
-              $ref: '#/components/schemas/Request'
-            example:
-              amount: "100"
-              disablePrinting: true
-              referenceId: merchant-ref-number-abc123
-              language: en_GB
-              voucherCode: "200001"
-              whitelistAids:
-              - AIDNAME1
-              - AIDNAME2
-              whitelistBins:
-              - BIN1
-              - BIN2
-              callbackUrl: http://example.com/webhook-endpoint
-              deviceToken: b16526c3447ba6cea4818d
-              correlationId: 5d1d4ea-8229-44d7-b517-26a5ae6c2fda
-              timeToLive: 5
-          application/*+json:
-            schema:
-              $ref: '#/components/schemas/Request'
-            example:
-              amount: "100"
-              disablePrinting: true
-              referenceId: merchant-ref-number-abc123
-              language: en_GB
-              voucherCode: "200001"
-              whitelistAids:
-              - AIDNAME1
-              - AIDNAME2
-              whitelistBins:
-              - BIN1
-              - BIN2
-              callbackUrl: http://example.com/webhook-endpoint
-              deviceToken: b16526c3447ba6cea4818d
-              correlationId: 5d1d4ea-8229-44d7-b517-26a5ae6c2fda
-              timeToLive: 5
-      responses:
-        "202":
-          description: Accepted
-        "400":
-          description: Bad Request
-          content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
-              example:
-                type: https://tools.ietf.org/html/rfc7231#section-6.5.1
-                title: Bad Request
-                status: 400
-                detail: DeviceId not registered
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
-              example:
-                type: https://tools.ietf.org/html/rfc7231#section-6.5.1
-                title: Bad Request
-                status: 400
-                detail: DeviceId not registered
-            text/json:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
-              example:
-                type: https://tools.ietf.org/html/rfc7231#section-6.5.1
-                title: Bad Request
-                status: 400
-                detail: DeviceId not registered
-        "401":
-          description: Unauthorized
-          content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
-              example:
-                message: Unauthorized
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
-              example:
-                message: Unauthorized
-            text/json:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
-              example:
-                message: Unauthorized
-        "500":
-          description: Server Error
-  /void:
-    post:
-      tags:
-      - CloudLink
-      summary: Send a request to display a void on a PAX POS device
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/VoidRequest'
-            example:
-              uti: 83EF00C9-8A86-4E84-8E05-35B7B4358566
-              amount: "100"
-              disablePrinting: true
-              referenceId: merchant-ref-number-abc123
-              language: en_GB
-              callbackUrl: http://example.com/webhook-endpoint
-              deviceToken: b16526c3447ba6cea4818d
-              correlationId: 5d1d4ea-8229-44d7-b517-26a5ae6c2fda
-              timeToLive: 5
-          text/json:
-            schema:
-              $ref: '#/components/schemas/VoidRequest'
-            example:
-              uti: 83EF00C9-8A86-4E84-8E05-35B7B4358566
-              amount: "100"
-              disablePrinting: true
-              referenceId: merchant-ref-number-abc123
-              language: en_GB
-              callbackUrl: http://example.com/webhook-endpoint
-              deviceToken: b16526c3447ba6cea4818d
-              correlationId: 5d1d4ea-8229-44d7-b517-26a5ae6c2fda
-              timeToLive: 5
-          application/*+json:
-            schema:
-              $ref: '#/components/schemas/VoidRequest'
-            example:
-              uti: 83EF00C9-8A86-4E84-8E05-35B7B4358566
-              amount: "100"
-              disablePrinting: true
-              referenceId: merchant-ref-number-abc123
-              language: en_GB
-              callbackUrl: http://example.com/webhook-endpoint
-              deviceToken: b16526c3447ba6cea4818d
-              correlationId: 5d1d4ea-8229-44d7-b517-26a5ae6c2fda
-              timeToLive: 5
-      responses:
-        "202":
-          description: Accepted
-        "400":
-          description: Bad Request
-          content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
-              example:
-                type: https://tools.ietf.org/html/rfc7231#section-6.5.1
-                title: One or more validation errors occurred.
-                status: 400
-                errors:
-                  Uti:
-                  - The Uti field is required.
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
-              example:
-                type: https://tools.ietf.org/html/rfc7231#section-6.5.1
-                title: One or more validation errors occurred.
-                status: 400
-                errors:
-                  Uti:
-                  - The Uti field is required.
-            text/json:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
-              example:
-                type: https://tools.ietf.org/html/rfc7231#section-6.5.1
-                title: One or more validation errors occurred.
-                status: 400
-                errors:
-                  Uti:
-                  - The Uti field is required.
-        "401":
-          description: Unauthorized
-          content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
-              example:
-                message: Unauthorized
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
-              example:
-                message: Unauthorized
-            text/json:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
-              example:
-                message: Unauthorized
-        "500":
-          description: Server Error
-  /cancel:
-    post:
-      tags:
-      - CloudLink
-      summary: Send a request to cancel a sale that is being displayed on a PAX POS
-        device
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CancelRequest'
-            example:
-              deviceToken: b16526c3447ba6cea4818d
-              correlationId: 011182D3-A941-4207-9905-D7770347D492
-          text/json:
-            schema:
-              $ref: '#/components/schemas/CancelRequest'
-            example:
-              deviceToken: b16526c3447ba6cea4818d
-              correlationId: 011182D3-A941-4207-9905-D7770347D492
-          application/*+json:
-            schema:
-              $ref: '#/components/schemas/CancelRequest'
-            example:
-              deviceToken: b16526c3447ba6cea4818d
-              correlationId: 011182D3-A941-4207-9905-D7770347D492
-      responses:
-        "202":
-          description: Accepted
-        "400":
-          description: Bad Request
-          content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
-              example:
-                type: https://tools.ietf.org/html/rfc7231#section-6.5.1
-                title: Bad Request
-                status: 400
-                detail: DeviceId not registered
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
-              example:
-                type: https://tools.ietf.org/html/rfc7231#section-6.5.1
-                title: Bad Request
-                status: 400
-                detail: DeviceId not registered
-            text/json:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
-              example:
-                type: https://tools.ietf.org/html/rfc7231#section-6.5.1
-                title: Bad Request
-                status: 400
-                detail: DeviceId not registered
-        "401":
-          description: Unauthorized
-          content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
-              example:
-                message: Unauthorized
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
-              example:
-                message: Unauthorized
-            text/json:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
-              example:
-                message: Unauthorized
-        "500":
-          description: Server Error
-  /reprint:
-    post:
-      tags:
-      - CloudLink
-      summary: Send a request to reprint a receipt of a previous sale from a PAX POS
-        device
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Reprint'
-            example:
-              receiptType: CARDHOLDER_RECEIPT
-              uti: 83EF00C9-8A86-4E84-8E05-35B7B4358566
-              callbackUrl: http://example.com/webhook-endpoint
-              deviceToken: b16526c3447ba6cea4818d
-              correlationId: 011182D3-A941-4207-9905-D7770347D492
-              timeToLive: 5
-          text/json:
-            schema:
-              $ref: '#/components/schemas/Reprint'
-            example:
-              receiptType: CARDHOLDER_RECEIPT
-              uti: 83EF00C9-8A86-4E84-8E05-35B7B4358566
-              callbackUrl: http://example.com/webhook-endpoint
-              deviceToken: b16526c3447ba6cea4818d
-              correlationId: 011182D3-A941-4207-9905-D7770347D492
-              timeToLive: 5
-          application/*+json:
-            schema:
-              $ref: '#/components/schemas/Reprint'
-            example:
-              receiptType: CARDHOLDER_RECEIPT
-              uti: 83EF00C9-8A86-4E84-8E05-35B7B4358566
-              callbackUrl: http://example.com/webhook-endpoint
-              deviceToken: b16526c3447ba6cea4818d
-              correlationId: 011182D3-A941-4207-9905-D7770347D492
-              timeToLive: 5
-      responses:
-        "202":
-          description: Accepted
-        "400":
-          description: Bad Request
-          content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
-              example:
-                type: https://tools.ietf.org/html/rfc7231#section-6.5.1
-                title: One or more validation errors occurred.
-                status: 400
-                errors:
-                  Uti:
-                  - The Uti field is required.
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
-              example:
-                type: https://tools.ietf.org/html/rfc7231#section-6.5.1
-                title: One or more validation errors occurred.
-                status: 400
-                errors:
-                  Uti:
-                  - The Uti field is required.
-            text/json:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
-              example:
-                type: https://tools.ietf.org/html/rfc7231#section-6.5.1
-                title: One or more validation errors occurred.
-                status: 400
-                errors:
-                  Uti:
-                  - The Uti field is required.
-        "401":
-          description: Unauthorized
-          content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
-              example:
-                message: Unauthorized
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
-              example:
-                message: Unauthorized
-            text/json:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
-              example:
-                message: Unauthorized
-        "500":
-          description: Server Error
-  /confirmation:
-    post:
-      tags:
-      - CloudLink
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ConfirmationRequest'
-          text/json:
-            schema:
-              $ref: '#/components/schemas/ConfirmationRequest'
-          application/*+json:
-            schema:
-              $ref: '#/components/schemas/ConfirmationRequest'
-      responses:
-        "202":
-          description: Accepted
-        "401":
-          description: Unauthorized
-          content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
-              example:
-                message: Unauthorized
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
-              example:
-                message: Unauthorized
-            text/json:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
-              example:
-                message: Unauthorized
-        "500":
-          description: Server Error
-      deprecated: true
-  /printoncommand:
-    post:
-      tags:
-      - CloudLink
-      summary: Send a request to print a message from a PAX POS device
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PrintOnCommand'
-            example:
-              deviceToken: b16526c3447ba6cea4818d
-              message: "[[CardholderReceipt, 5, C, B], [], [, 5, L, B], [Address1\
-                \ 6, 5, L, B], [1234AB Address2, 5, L, B], [], [2024-05-31, 12:08,\
-                \ 5, S, N], [ABCD, 9, L, I], [***************1234, 5, L, N], [], [Authorized\
-                \ - P00036, 5, C, B], [], [], [], [SALE, 5, C, N], [AMOUNT, 9, C,\
-                \ B], [€ 256,50, 9, C, B], [PIN VERIFIED, 5, L, N], [CONTACTLESS,\
-                \ 5, L, N], [Voucher: 452, 1, L, N], [***********1234, *****244, 1,\
-                \ S, N], [A0000000032010, 1, L, N], []]"
-          text/json:
-            schema:
-              $ref: '#/components/schemas/PrintOnCommand'
-            example:
-              deviceToken: b16526c3447ba6cea4818d
-              message: "[[CardholderReceipt, 5, C, B], [], [, 5, L, B], [Address1\
-                \ 6, 5, L, B], [1234AB Address2, 5, L, B], [], [2024-05-31, 12:08,\
-                \ 5, S, N], [ABCD, 9, L, I], [***************1234, 5, L, N], [], [Authorized\
-                \ - P00036, 5, C, B], [], [], [], [SALE, 5, C, N], [AMOUNT, 9, C,\
-                \ B], [€ 256,50, 9, C, B], [PIN VERIFIED, 5, L, N], [CONTACTLESS,\
-                \ 5, L, N], [Voucher: 452, 1, L, N], [***********1234, *****244, 1,\
-                \ S, N], [A0000000032010, 1, L, N], []]"
-          application/*+json:
-            schema:
-              $ref: '#/components/schemas/PrintOnCommand'
-            example:
-              deviceToken: b16526c3447ba6cea4818d
-              message: "[[CardholderReceipt, 5, C, B], [], [, 5, L, B], [Address1\
-                \ 6, 5, L, B], [1234AB Address2, 5, L, B], [], [2024-05-31, 12:08,\
-                \ 5, S, N], [ABCD, 9, L, I], [***************1234, 5, L, N], [], [Authorized\
-                \ - P00036, 5, C, B], [], [], [], [SALE, 5, C, N], [AMOUNT, 9, C,\
-                \ B], [€ 256,50, 9, C, B], [PIN VERIFIED, 5, L, N], [CONTACTLESS,\
-                \ 5, L, N], [Voucher: 452, 1, L, N], [***********1234, *****244, 1,\
-                \ S, N], [A0000000032010, 1, L, N], []]"
-      responses:
-        "202":
-          description: Accepted
-        "400":
-          description: Bad Request
-          content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
-              example:
-                type: https://tools.ietf.org/html/rfc7231#section-6.5.1
-                title: Bad Request
-                status: 400
-                detail: DeviceId not registered
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
-              example:
-                type: https://tools.ietf.org/html/rfc7231#section-6.5.1
-                title: Bad Request
-                status: 400
-                detail: DeviceId not registered
-            text/json:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
-              example:
-                type: https://tools.ietf.org/html/rfc7231#section-6.5.1
-                title: Bad Request
-                status: 400
-                detail: DeviceId not registered
-        "401":
-          description: Unauthorized
-          content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
-              example:
-                message: Unauthorized
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
-              example:
-                message: Unauthorized
-            text/json:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
-              example:
-                message: Unauthorized
-        "500":
-          description: Server Error
-  /completion:
-    post:
-      tags:
-      - CloudLink
-      summary: Send a request to run a completion on device
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CompletionRequest'
-            example:
-              panFirstSix: "123456"
-              panLastFour: "7890"
-              authCode: "123456"
-              stan: "99"
-              cardLength: "16"
-              amount: "100"
-              disablePrinting: true
-              referenceId: merchant-ref-number-abc123
-              language: en_GB
-              callbackUrl: http://example.com/webhook-endpoint
-              deviceToken: b16526c3447ba6cea4818d
-              correlationId: 5d1d4ea-8229-44d7-b517-26a5ae6c2fda
-              timeToLive: 5
-          text/json:
-            schema:
-              $ref: '#/components/schemas/CompletionRequest'
-            example:
-              panFirstSix: "123456"
-              panLastFour: "7890"
-              authCode: "123456"
-              stan: "99"
-              cardLength: "16"
-              amount: "100"
-              disablePrinting: true
-              referenceId: merchant-ref-number-abc123
-              language: en_GB
-              callbackUrl: http://example.com/webhook-endpoint
-              deviceToken: b16526c3447ba6cea4818d
-              correlationId: 5d1d4ea-8229-44d7-b517-26a5ae6c2fda
-              timeToLive: 5
-          application/*+json:
-            schema:
-              $ref: '#/components/schemas/CompletionRequest'
-            example:
-              panFirstSix: "123456"
-              panLastFour: "7890"
-              authCode: "123456"
-              stan: "99"
-              cardLength: "16"
-              amount: "100"
-              disablePrinting: true
-              referenceId: merchant-ref-number-abc123
-              language: en_GB
-              callbackUrl: http://example.com/webhook-endpoint
-              deviceToken: b16526c3447ba6cea4818d
-              correlationId: 5d1d4ea-8229-44d7-b517-26a5ae6c2fda
-              timeToLive: 5
-      responses:
-        "202":
-          description: Accepted
-        "400":
-          description: Bad Request
-          content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
-              example:
-                type: https://tools.ietf.org/html/rfc7231#section-6.5.1
-                title: Bad Request
-                status: 400
-                detail: DeviceId not registered
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
-              example:
-                type: https://tools.ietf.org/html/rfc7231#section-6.5.1
-                title: Bad Request
-                status: 400
-                detail: DeviceId not registered
-            text/json:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
-              example:
-                type: https://tools.ietf.org/html/rfc7231#section-6.5.1
-                title: Bad Request
-                status: 400
-                detail: DeviceId not registered
-        "401":
-          description: Unauthorized
-          content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
-              example:
-                message: Unauthorized
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
-              example:
-                message: Unauthorized
-            text/json:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
-              example:
-                message: Unauthorized
-        "500":
-          description: Server Error
-  /cancelpreauth:
-    post:
-      tags:
-      - CloudLink
-      summary: Send a request to request a cancel of a pre-authorization on a PAX
-        POS device
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CompletionRequest'
-            example:
-              panFirstSix: "123456"
-              panLastFour: "7890"
-              authCode: "123456"
-              stan: "99"
-              cardLength: "16"
-              amount: "100"
-              disablePrinting: true
-              referenceId: merchant-ref-number-abc123
-              language: en_GB
-              callbackUrl: http://example.com/webhook-endpoint
-              deviceToken: b16526c3447ba6cea4818d
-              correlationId: 5d1d4ea-8229-44d7-b517-26a5ae6c2fda
-              timeToLive: 5
-          text/json:
-            schema:
-              $ref: '#/components/schemas/CompletionRequest'
-            example:
-              panFirstSix: "123456"
-              panLastFour: "7890"
-              authCode: "123456"
-              stan: "99"
-              cardLength: "16"
-              amount: "100"
-              disablePrinting: true
-              referenceId: merchant-ref-number-abc123
-              language: en_GB
-              callbackUrl: http://example.com/webhook-endpoint
-              deviceToken: b16526c3447ba6cea4818d
-              correlationId: 5d1d4ea-8229-44d7-b517-26a5ae6c2fda
-              timeToLive: 5
-          application/*+json:
-            schema:
-              $ref: '#/components/schemas/CompletionRequest'
-            example:
-              panFirstSix: "123456"
-              panLastFour: "7890"
-              authCode: "123456"
-              stan: "99"
-              cardLength: "16"
-              amount: "100"
-              disablePrinting: true
-              referenceId: merchant-ref-number-abc123
-              language: en_GB
-              callbackUrl: http://example.com/webhook-endpoint
-              deviceToken: b16526c3447ba6cea4818d
-              correlationId: 5d1d4ea-8229-44d7-b517-26a5ae6c2fda
-              timeToLive: 5
-      responses:
-        "202":
-          description: Accepted
-        "400":
-          description: Bad Request
-          content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
-              example:
-                type: https://tools.ietf.org/html/rfc7231#section-6.5.1
-                title: Bad Request
-                status: 400
-                detail: DeviceId not registered
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
-              example:
-                type: https://tools.ietf.org/html/rfc7231#section-6.5.1
-                title: Bad Request
-                status: 400
-                detail: DeviceId not registered
-            text/json:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
-              example:
-                type: https://tools.ietf.org/html/rfc7231#section-6.5.1
-                title: Bad Request
-                status: 400
-                detail: DeviceId not registered
-        "401":
-          description: Unauthorized
-          content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
-              example:
-                message: Unauthorized
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
-              example:
-                message: Unauthorized
-            text/json:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
-              example:
-                message: Unauthorized
-        "500":
-          description: Server Error
-  /poll/sale:
-    post:
-      tags:
-      - CloudLinkPoll
-      summary: Send a request to display a sale on a PAX POS device
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/RequestUsingPoll'
-            example:
-              amount: "100"
-              disablePrinting: true
-              referenceId: merchant-ref-number-abc123
-              language: en_GB
-              pollId: e855e0cf-a026-4614-9dcb-58814455b6a4
-              deviceToken: b16526c3447ba6cea4818d
-              correlationId: 5d1d4ea-8229-44d7-b517-26a5ae6c2fda
-              timeToLive: 5
-          text/json:
-            schema:
-              $ref: '#/components/schemas/RequestUsingPoll'
-            example:
-              amount: "100"
-              disablePrinting: true
-              referenceId: merchant-ref-number-abc123
-              language: en_GB
-              pollId: e855e0cf-a026-4614-9dcb-58814455b6a4
-              deviceToken: b16526c3447ba6cea4818d
-              correlationId: 5d1d4ea-8229-44d7-b517-26a5ae6c2fda
-              timeToLive: 5
-          application/*+json:
-            schema:
-              $ref: '#/components/schemas/RequestUsingPoll'
-            example:
-              amount: "100"
-              disablePrinting: true
-              referenceId: merchant-ref-number-abc123
-              language: en_GB
-              pollId: e855e0cf-a026-4614-9dcb-58814455b6a4
-              deviceToken: b16526c3447ba6cea4818d
-              correlationId: 5d1d4ea-8229-44d7-b517-26a5ae6c2fda
-              timeToLive: 5
-      responses:
-        "202":
-          description: Accepted
-        "400":
-          description: Bad Request
-          content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
-              example:
-                type: https://tools.ietf.org/html/rfc7231#section-6.5.1
-                title: Bad Request
-                status: 400
-                detail: DeviceId not registered
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
-              example:
-                type: https://tools.ietf.org/html/rfc7231#section-6.5.1
-                title: Bad Request
-                status: 400
-                detail: DeviceId not registered
-            text/json:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
-              example:
-                type: https://tools.ietf.org/html/rfc7231#section-6.5.1
-                title: Bad Request
-                status: 400
-                detail: DeviceId not registered
-        "401":
-          description: Unauthorized
-          content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
-              example:
-                message: Unauthorized
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
-              example:
-                message: Unauthorized
-            text/json:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
-              example:
-                message: Unauthorized
-        "500":
-          description: Server Error
-  /poll/preauth:
-    post:
-      tags:
-      - CloudLinkPoll
-      summary: Send a request using the poll method to display a pre-authorization
-        on a PAX POS device
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/RequestUsingPoll'
-            example:
-              amount: "100"
-              disablePrinting: true
-              referenceId: merchant-ref-number-abc123
-              language: en_GB
-              pollId: e855e0cf-a026-4614-9dcb-58814455b6a4
-              deviceToken: b16526c3447ba6cea4818d
-              correlationId: 5d1d4ea-8229-44d7-b517-26a5ae6c2fda
-              timeToLive: 5
-          text/json:
-            schema:
-              $ref: '#/components/schemas/RequestUsingPoll'
-            example:
-              amount: "100"
-              disablePrinting: true
-              referenceId: merchant-ref-number-abc123
-              language: en_GB
-              pollId: e855e0cf-a026-4614-9dcb-58814455b6a4
-              deviceToken: b16526c3447ba6cea4818d
-              correlationId: 5d1d4ea-8229-44d7-b517-26a5ae6c2fda
-              timeToLive: 5
-          application/*+json:
-            schema:
-              $ref: '#/components/schemas/RequestUsingPoll'
-            example:
-              amount: "100"
-              disablePrinting: true
-              referenceId: merchant-ref-number-abc123
-              language: en_GB
-              pollId: e855e0cf-a026-4614-9dcb-58814455b6a4
-              deviceToken: b16526c3447ba6cea4818d
-              correlationId: 5d1d4ea-8229-44d7-b517-26a5ae6c2fda
-              timeToLive: 5
-      responses:
-        "202":
-          description: Accepted
-        "400":
-          description: Bad Request
-          content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
-              example:
-                type: https://tools.ietf.org/html/rfc7231#section-6.5.1
-                title: Bad Request
-                status: 400
-                detail: DeviceId not registered
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
-              example:
-                type: https://tools.ietf.org/html/rfc7231#section-6.5.1
-                title: Bad Request
-                status: 400
-                detail: DeviceId not registered
-            text/json:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
-              example:
-                type: https://tools.ietf.org/html/rfc7231#section-6.5.1
-                title: Bad Request
-                status: 400
-                detail: DeviceId not registered
-        "401":
-          description: Unauthorized
-          content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
-              example:
-                message: Unauthorized
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
-              example:
-                message: Unauthorized
-            text/json:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
-              example:
-                message: Unauthorized
-        "500":
-          description: Server Error
-  /poll/refund:
-    post:
-      tags:
-      - CloudLinkPoll
-      summary: Send a request using the poll method to display a refund on a PAX POS
-        device
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/RequestUsingPoll'
-            example:
-              amount: "100"
-              disablePrinting: true
-              referenceId: merchant-ref-number-abc123
-              language: en_GB
-              pollId: e855e0cf-a026-4614-9dcb-58814455b6a4
-              deviceToken: b16526c3447ba6cea4818d
-              correlationId: 5d1d4ea-8229-44d7-b517-26a5ae6c2fda
-              timeToLive: 5
-          text/json:
-            schema:
-              $ref: '#/components/schemas/RequestUsingPoll'
-            example:
-              amount: "100"
-              disablePrinting: true
-              referenceId: merchant-ref-number-abc123
-              language: en_GB
-              pollId: e855e0cf-a026-4614-9dcb-58814455b6a4
-              deviceToken: b16526c3447ba6cea4818d
-              correlationId: 5d1d4ea-8229-44d7-b517-26a5ae6c2fda
-              timeToLive: 5
-          application/*+json:
-            schema:
-              $ref: '#/components/schemas/RequestUsingPoll'
-            example:
-              amount: "100"
-              disablePrinting: true
-              referenceId: merchant-ref-number-abc123
-              language: en_GB
-              pollId: e855e0cf-a026-4614-9dcb-58814455b6a4
-              deviceToken: b16526c3447ba6cea4818d
-              correlationId: 5d1d4ea-8229-44d7-b517-26a5ae6c2fda
-              timeToLive: 5
-      responses:
-        "202":
-          description: Accepted
-        "400":
-          description: Bad Request
-          content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
-              example:
-                type: https://tools.ietf.org/html/rfc7231#section-6.5.1
-                title: Bad Request
-                status: 400
-                detail: DeviceId not registered
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
-              example:
-                type: https://tools.ietf.org/html/rfc7231#section-6.5.1
-                title: Bad Request
-                status: 400
-                detail: DeviceId not registered
-            text/json:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
-              example:
-                type: https://tools.ietf.org/html/rfc7231#section-6.5.1
-                title: Bad Request
-                status: 400
-                detail: DeviceId not registered
-        "401":
-          description: Unauthorized
-          content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
-              example:
-                message: Unauthorized
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
-              example:
-                message: Unauthorized
-            text/json:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
-              example:
-                message: Unauthorized
-        "500":
-          description: Server Error
-  /poll/void:
-    post:
-      tags:
-      - CloudLinkPoll
-      summary: Send a request using the poll method to display a void on a PAX POS
-        device
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/VoidRequestUsingPoll'
-            example:
-              uti: 83EF00C9-8A86-4E84-8E05-35B7B4358566
-              amount: "100"
-              disablePrinting: true
-              referenceId: merchant-ref-number-abc123
-              language: en_GB
-              pollId: 03aa1721-65ea-4db3-af51-d1294446238c
-              deviceToken: b16526c3447ba6cea4818d
-              correlationId: 5d1d4ea-8229-44d7-b517-26a5ae6c2fda
-              timeToLive: 5
-          text/json:
-            schema:
-              $ref: '#/components/schemas/VoidRequestUsingPoll'
-            example:
-              uti: 83EF00C9-8A86-4E84-8E05-35B7B4358566
-              amount: "100"
-              disablePrinting: true
-              referenceId: merchant-ref-number-abc123
-              language: en_GB
-              pollId: 03aa1721-65ea-4db3-af51-d1294446238c
-              deviceToken: b16526c3447ba6cea4818d
-              correlationId: 5d1d4ea-8229-44d7-b517-26a5ae6c2fda
-              timeToLive: 5
-          application/*+json:
-            schema:
-              $ref: '#/components/schemas/VoidRequestUsingPoll'
-            example:
-              uti: 83EF00C9-8A86-4E84-8E05-35B7B4358566
-              amount: "100"
-              disablePrinting: true
-              referenceId: merchant-ref-number-abc123
-              language: en_GB
-              pollId: 03aa1721-65ea-4db3-af51-d1294446238c
-              deviceToken: b16526c3447ba6cea4818d
-              correlationId: 5d1d4ea-8229-44d7-b517-26a5ae6c2fda
-              timeToLive: 5
-      responses:
-        "202":
-          description: Accepted
-        "400":
-          description: Bad Request
-          content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
-              example:
-                type: https://tools.ietf.org/html/rfc7231#section-6.5.1
-                title: One or more validation errors occurred.
-                status: 400
-                errors:
-                  Uti:
-                  - The Uti field is required.
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
-              example:
-                type: https://tools.ietf.org/html/rfc7231#section-6.5.1
-                title: One or more validation errors occurred.
-                status: 400
-                errors:
-                  Uti:
-                  - The Uti field is required.
-            text/json:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
-              example:
-                type: https://tools.ietf.org/html/rfc7231#section-6.5.1
-                title: One or more validation errors occurred.
-                status: 400
-                errors:
-                  Uti:
-                  - The Uti field is required.
-        "401":
-          description: Unauthorized
-          content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
-              example:
-                message: Unauthorized
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
-              example:
-                message: Unauthorized
-            text/json:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
-              example:
-                message: Unauthorized
-        "500":
-          description: Server Error
-  /poll/cancel:
-    post:
-      tags:
-      - CloudLinkPoll
-      summary: Send a request to cancel a sale that is being displayed on a PAX POS
-        device
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CancelRequest'
-            example:
-              deviceToken: b16526c3447ba6cea4818d
-              correlationId: 011182D3-A941-4207-9905-D7770347D492
-          text/json:
-            schema:
-              $ref: '#/components/schemas/CancelRequest'
-            example:
-              deviceToken: b16526c3447ba6cea4818d
-              correlationId: 011182D3-A941-4207-9905-D7770347D492
-          application/*+json:
-            schema:
-              $ref: '#/components/schemas/CancelRequest'
-            example:
-              deviceToken: b16526c3447ba6cea4818d
-              correlationId: 011182D3-A941-4207-9905-D7770347D492
-      responses:
-        "202":
-          description: Accepted
-        "400":
-          description: Bad Request
-          content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
-              example:
-                type: https://tools.ietf.org/html/rfc7231#section-6.5.1
-                title: Bad Request
-                status: 400
-                detail: DeviceId not registered
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
-              example:
-                type: https://tools.ietf.org/html/rfc7231#section-6.5.1
-                title: Bad Request
-                status: 400
-                detail: DeviceId not registered
-            text/json:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
-              example:
-                type: https://tools.ietf.org/html/rfc7231#section-6.5.1
-                title: Bad Request
-                status: 400
-                detail: DeviceId not registered
-        "401":
-          description: Unauthorized
-          content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
-              example:
-                message: Unauthorized
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
-              example:
-                message: Unauthorized
-            text/json:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
-              example:
-                message: Unauthorized
-        "500":
-          description: Server Error
-  /poll/reprint:
-    post:
-      tags:
-      - CloudLinkPoll
-      summary: Send a request using the poll method to reprint a receipt of a previous
-        sale from a PAX POS device
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ReprintUsingPoll'
-            example:
-              receiptType: CARDHOLDER_RECEIPT
-              uti: 83EF00C9-8A86-4E84-8E05-35B7B4358566
-              pollId: feace7b6-2118-4a95-9c94-8f7b08ff2700
-              deviceToken: b16526c3447ba6cea4818d
-              correlationId: 011182D3-A941-4207-9905-D7770347D492
-              timeToLive: 5
-          text/json:
-            schema:
-              $ref: '#/components/schemas/ReprintUsingPoll'
-            example:
-              receiptType: CARDHOLDER_RECEIPT
-              uti: 83EF00C9-8A86-4E84-8E05-35B7B4358566
-              pollId: feace7b6-2118-4a95-9c94-8f7b08ff2700
-              deviceToken: b16526c3447ba6cea4818d
-              correlationId: 011182D3-A941-4207-9905-D7770347D492
-              timeToLive: 5
-          application/*+json:
-            schema:
-              $ref: '#/components/schemas/ReprintUsingPoll'
-            example:
-              receiptType: CARDHOLDER_RECEIPT
-              uti: 83EF00C9-8A86-4E84-8E05-35B7B4358566
-              pollId: feace7b6-2118-4a95-9c94-8f7b08ff2700
-              deviceToken: b16526c3447ba6cea4818d
-              correlationId: 011182D3-A941-4207-9905-D7770347D492
-              timeToLive: 5
-      responses:
-        "202":
-          description: Accepted
-        "400":
-          description: Bad Request
-          content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
-              example:
-                type: https://tools.ietf.org/html/rfc7231#section-6.5.1
-                title: One or more validation errors occurred.
-                status: 400
-                errors:
-                  Uti:
-                  - The Uti field is required.
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
-              example:
-                type: https://tools.ietf.org/html/rfc7231#section-6.5.1
-                title: One or more validation errors occurred.
-                status: 400
-                errors:
-                  Uti:
-                  - The Uti field is required.
-            text/json:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
-              example:
-                type: https://tools.ietf.org/html/rfc7231#section-6.5.1
-                title: One or more validation errors occurred.
-                status: 400
-                errors:
-                  Uti:
-                  - The Uti field is required.
-        "401":
-          description: Unauthorized
-          content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
-              example:
-                message: Unauthorized
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
-              example:
-                message: Unauthorized
-            text/json:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
-              example:
-                message: Unauthorized
-        "500":
-          description: Server Error
-  /poll/confirmation:
-    post:
-      tags:
-      - CloudLinkPoll
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ConfirmationRequest'
-          text/json:
-            schema:
-              $ref: '#/components/schemas/ConfirmationRequest'
-          application/*+json:
-            schema:
-              $ref: '#/components/schemas/ConfirmationRequest'
-      responses:
-        "202":
-          description: Accepted
-        "401":
-          description: Unauthorized
-          content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
-              example:
-                message: Unauthorized
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
-              example:
-                message: Unauthorized
-            text/json:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
-              example:
-                message: Unauthorized
-        "500":
-          description: Server Error
-      deprecated: true
-  /poll/printoncommand:
-    post:
-      tags:
-      - CloudLinkPoll
-      summary: Send a request to print a message from a PAX POS device
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PrintOnCommand'
-            example:
-              deviceToken: b16526c3447ba6cea4818d
-              message: "[[CardholderReceipt, 5, C, B], [], [, 5, L, B], [Address1\
-                \ 6, 5, L, B], [1234AB Address2, 5, L, B], [], [2024-05-31, 12:08,\
-                \ 5, S, N], [ABCD, 9, L, I], [***************1234, 5, L, N], [], [Authorized\
-                \ - P00036, 5, C, B], [], [], [], [SALE, 5, C, N], [AMOUNT, 9, C,\
-                \ B], [€ 256,50, 9, C, B], [PIN VERIFIED, 5, L, N], [CONTACTLESS,\
-                \ 5, L, N], [Voucher: 452, 1, L, N], [***********1234, *****244, 1,\
-                \ S, N], [A0000000032010, 1, L, N], []]"
-          text/json:
-            schema:
-              $ref: '#/components/schemas/PrintOnCommand'
-            example:
-              deviceToken: b16526c3447ba6cea4818d
-              message: "[[CardholderReceipt, 5, C, B], [], [, 5, L, B], [Address1\
-                \ 6, 5, L, B], [1234AB Address2, 5, L, B], [], [2024-05-31, 12:08,\
-                \ 5, S, N], [ABCD, 9, L, I], [***************1234, 5, L, N], [], [Authorized\
-                \ - P00036, 5, C, B], [], [], [], [SALE, 5, C, N], [AMOUNT, 9, C,\
-                \ B], [€ 256,50, 9, C, B], [PIN VERIFIED, 5, L, N], [CONTACTLESS,\
-                \ 5, L, N], [Voucher: 452, 1, L, N], [***********1234, *****244, 1,\
-                \ S, N], [A0000000032010, 1, L, N], []]"
-          application/*+json:
-            schema:
-              $ref: '#/components/schemas/PrintOnCommand'
-            example:
-              deviceToken: b16526c3447ba6cea4818d
-              message: "[[CardholderReceipt, 5, C, B], [], [, 5, L, B], [Address1\
-                \ 6, 5, L, B], [1234AB Address2, 5, L, B], [], [2024-05-31, 12:08,\
-                \ 5, S, N], [ABCD, 9, L, I], [***************1234, 5, L, N], [], [Authorized\
-                \ - P00036, 5, C, B], [], [], [], [SALE, 5, C, N], [AMOUNT, 9, C,\
-                \ B], [€ 256,50, 9, C, B], [PIN VERIFIED, 5, L, N], [CONTACTLESS,\
-                \ 5, L, N], [Voucher: 452, 1, L, N], [***********1234, *****244, 1,\
-                \ S, N], [A0000000032010, 1, L, N], []]"
-      responses:
-        "202":
-          description: Accepted
-        "400":
-          description: Bad Request
-          content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
-              example:
-                type: https://tools.ietf.org/html/rfc7231#section-6.5.1
-                title: Bad Request
-                status: 400
-                detail: DeviceId not registered
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
-              example:
-                type: https://tools.ietf.org/html/rfc7231#section-6.5.1
-                title: Bad Request
-                status: 400
-                detail: DeviceId not registered
-            text/json:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
-              example:
-                type: https://tools.ietf.org/html/rfc7231#section-6.5.1
-                title: Bad Request
-                status: 400
-                detail: DeviceId not registered
-        "401":
-          description: Unauthorized
-          content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
-              example:
-                message: Unauthorized
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
-              example:
-                message: Unauthorized
-            text/json:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
-              example:
-                message: Unauthorized
-        "500":
-          description: Server Error
-  /poll/completion:
-    post:
-      tags:
-      - CloudLinkPoll
-      summary: Complete a transaction using the poll method to finalize the transaction
-        on the terminal.
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CompletionRequestUsingPoll'
-            example:
-              panFirstSix: "123456"
-              panLastFour: "7890"
-              authCode: "123456"
-              stan: "99"
-              cardLength: "16"
-              amount: "100"
-              disablePrinting: true
-              referenceId: merchant-ref-number-abc123
-              language: en_GB
-              pollId: 83f77744-352f-4ed0-9307-c28c43f6508f
-              deviceToken: b16526c3447ba6cea4818d
-              correlationId: 5d1d4ea-8229-44d7-b517-26a5ae6c2fda
-              timeToLive: 5
-          text/json:
-            schema:
-              $ref: '#/components/schemas/CompletionRequestUsingPoll'
-            example:
-              panFirstSix: "123456"
-              panLastFour: "7890"
-              authCode: "123456"
-              stan: "99"
-              cardLength: "16"
-              amount: "100"
-              disablePrinting: true
-              referenceId: merchant-ref-number-abc123
-              language: en_GB
-              pollId: 83f77744-352f-4ed0-9307-c28c43f6508f
-              deviceToken: b16526c3447ba6cea4818d
-              correlationId: 5d1d4ea-8229-44d7-b517-26a5ae6c2fda
-              timeToLive: 5
-          application/*+json:
-            schema:
-              $ref: '#/components/schemas/CompletionRequestUsingPoll'
-            example:
-              panFirstSix: "123456"
-              panLastFour: "7890"
-              authCode: "123456"
-              stan: "99"
-              cardLength: "16"
-              amount: "100"
-              disablePrinting: true
-              referenceId: merchant-ref-number-abc123
-              language: en_GB
-              pollId: 83f77744-352f-4ed0-9307-c28c43f6508f
-              deviceToken: b16526c3447ba6cea4818d
-              correlationId: 5d1d4ea-8229-44d7-b517-26a5ae6c2fda
-              timeToLive: 5
-      responses:
-        "202":
-          description: Accepted
-        "400":
-          description: Bad Request
-          content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
-              example:
-                type: https://tools.ietf.org/html/rfc7231#section-6.5.1
-                title: Bad Request
-                status: 400
-                detail: DeviceId not registered
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
-              example:
-                type: https://tools.ietf.org/html/rfc7231#section-6.5.1
-                title: Bad Request
-                status: 400
-                detail: DeviceId not registered
-            text/json:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
-              example:
-                type: https://tools.ietf.org/html/rfc7231#section-6.5.1
-                title: Bad Request
-                status: 400
-                detail: DeviceId not registered
-        "401":
-          description: Unauthorized
-          content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
-              example:
-                message: Unauthorized
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
-              example:
-                message: Unauthorized
-            text/json:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
-              example:
-                message: Unauthorized
-        "500":
-          description: Server Error
-  /poll/cancelpreauth:
-    post:
-      tags:
-      - CloudLinkPoll
-      summary: Cancel a pre-authorization using the poll method to finalize the transaction
-        on the terminal.
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CancelPreauthRequestUsingPoll'
-            example:
-              panFirstSix: "123456"
-              panLastFour: "7890"
-              authCode: "123456"
-              stan: "99"
-              cardLength: "16"
-              disablePrinting: true
-              referenceId: merchant-ref-number-abc123
-              language: en_GB
-              pollId: 9614f4d3-fcc4-48f3-a52a-f9d11b34912c
-              deviceToken: b16526c3447ba6cea4818d
-              correlationId: 5d1d4ea-8229-44d7-b517-26a5ae6c2fda
-              timeToLive: 5
-          text/json:
-            schema:
-              $ref: '#/components/schemas/CancelPreauthRequestUsingPoll'
-            example:
-              panFirstSix: "123456"
-              panLastFour: "7890"
-              authCode: "123456"
-              stan: "99"
-              cardLength: "16"
-              disablePrinting: true
-              referenceId: merchant-ref-number-abc123
-              language: en_GB
-              pollId: 9614f4d3-fcc4-48f3-a52a-f9d11b34912c
-              deviceToken: b16526c3447ba6cea4818d
-              correlationId: 5d1d4ea-8229-44d7-b517-26a5ae6c2fda
-              timeToLive: 5
-          application/*+json:
-            schema:
-              $ref: '#/components/schemas/CancelPreauthRequestUsingPoll'
-            example:
-              panFirstSix: "123456"
-              panLastFour: "7890"
-              authCode: "123456"
-              stan: "99"
-              cardLength: "16"
-              disablePrinting: true
-              referenceId: merchant-ref-number-abc123
-              language: en_GB
-              pollId: 9614f4d3-fcc4-48f3-a52a-f9d11b34912c
-              deviceToken: b16526c3447ba6cea4818d
-              correlationId: 5d1d4ea-8229-44d7-b517-26a5ae6c2fda
-              timeToLive: 5
-      responses:
-        "202":
-          description: Accepted
-        "400":
-          description: Bad Request
-          content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
-              example:
-                type: https://tools.ietf.org/html/rfc7231#section-6.5.1
-                title: Bad Request
-                status: 400
-                detail: DeviceId not registered
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
-              example:
-                type: https://tools.ietf.org/html/rfc7231#section-6.5.1
-                title: Bad Request
-                status: 400
-                detail: DeviceId not registered
-            text/json:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
-              example:
-                type: https://tools.ietf.org/html/rfc7231#section-6.5.1
-                title: Bad Request
-                status: 400
-                detail: DeviceId not registered
-        "401":
-          description: Unauthorized
-          content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
-              example:
-                message: Unauthorized
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
-              example:
-                message: Unauthorized
-            text/json:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
-              example:
-                message: Unauthorized
-        "500":
-          description: Server Error
-  /poll/terminalresponse/{pollId}:
+        '200':
+          description: successful operation
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Pet'
+        '400':
+          description: Invalid status value
+      security:
+        - petstore_auth:
+            - 'write:pets'
+            - 'read:pets'
+  /pet/findByTags:
     get:
       tags:
-      - CloudLinkPoll
-      summary: "Check if the terminal as responded to a request.\r\nNote! This method\
-        \ is rate limited to one call per second per pollId."
+        - pet
+      summary: Finds Pets by tags
+      description: 'Multiple tags can be provided with comma separated strings. Use tag1, tag2, tag3 for testing.'
+      operationId: findPetsByTags
+      produces:
+        - application/xml
+        - application/json
       parameters:
-      - name: pollId
-        in: path
-        description: The pollId that was provided in the initial request
-        required: true
-        style: simple
-        explode: false
-        schema:
-          type: string
-          format: uuid
+        - name: tags
+          in: query
+          description: Tags to filter by
+          required: true
+          type: array
+          items:
+            type: string
+          collectionFormat: csv
       responses:
-        "202":
-          description: Accepted
-        "401":
-          description: Unauthorized
-          content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
-              example:
-                message: Unauthorized
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
-              example:
-                message: Unauthorized
-            text/json:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
-              example:
-                message: Unauthorized
-        "429":
-          description: Too Many Requests
-          content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
-              example:
-                type: https://tools.ietf.org/html/rfc7231#section-6.5.1
-                title: One or more validation errors occurred.
-                status: 400
-                errors:
-                  Uti:
-                  - The Uti field is required.
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
-              example:
-                type: https://tools.ietf.org/html/rfc7231#section-6.5.1
-                title: One or more validation errors occurred.
-                status: 400
-                errors:
-                  Uti:
-                  - The Uti field is required.
-            text/json:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
-              example:
-                type: https://tools.ietf.org/html/rfc7231#section-6.5.1
-                title: One or more validation errors occurred.
-                status: 400
-                errors:
-                  Uti:
-                  - The Uti field is required.
-        "500":
-          description: Server Error
-components:
-  schemas:
-    CancelPreauthRequestUsingPoll:
-      required:
-      - authCode
-      - cardLength
-      - deviceToken
-      - panFirstSix
-      - panLastFour
-      - pollId
-      - stan
-      type: object
-      properties:
-        panFirstSix:
-          minLength: 1
-          type: string
-          description: "First six letters of PAN from response e.g. 123456******7890\
-            \ input: \"123456\""
-        panLastFour:
-          minLength: 1
-          type: string
-          description: "Last four letters of PAN from response e.g. 123456******7890\
-            \ input: \"7890\""
-        authCode:
-          minLength: 1
-          type: string
-          description: Input authCode from original transaction
-        stan:
-          minLength: 1
-          type: string
-          description: Input Stan from original transaction
-        cardLength:
-          minLength: 1
-          type: string
-          description: "Input length of card e.g. 123456******7890 input: \"16\""
-        disablePrinting:
-          type: boolean
-          description: Should the terminal print a receipt
-        referenceId:
-          type: string
-          description: Optional reference from merchants
-          nullable: true
-        language:
-          $ref: '#/components/schemas/Language'
-        pollId:
-          type: string
-          description: The id used to poll after a terminal response
-          format: uuid
-        deviceToken:
-          minLength: 1
-          type: string
-          description: The token of a PAX pos device.
-        correlationId:
-          type: string
-          description: "An id provided by the caller. Will be returned in the callback\
-            \ for message matching.\r\nIn a cancel request, use the value from the\
-            \ sale/refund that is being cancelled."
-          nullable: true
-        timeToLive:
+        '200':
+          description: successful operation
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Pet'
+        '400':
+          description: Invalid tag value
+      security:
+        - petstore_auth:
+            - 'write:pets'
+            - 'read:pets'
+      deprecated: true
+  '/pet/{petId}':
+    get:
+      tags:
+        - pet
+      summary: Find pet by ID
+      description: Returns a single pet
+      operationId: getPetById
+      produces:
+        - application/xml
+        - application/json
+      parameters:
+        - name: petId
+          in: path
+          description: ID of pet to return
+          required: true
           type: integer
-          description: "If the request has not reached the PAX POS device within this\
-            \ time, the request will be deleted and no reversal action is required\
-            \ by the caller. If not set the default value is 5 seconds."
-          format: int32
-        endStateApplication:
+          format: int64
+      responses:
+        '200':
+          description: successful operation
+          schema:
+            $ref: '#/definitions/Pet'
+        '400':
+          description: Invalid ID supplied
+        '404':
+          description: Pet not found
+      security:
+        - api_key: []
+    post:
+      tags:
+        - pet
+      summary: Updates a pet in the store with form data
+      description: ''
+      operationId: updatePetWithForm
+      consumes:
+        - application/x-www-form-urlencoded
+      produces:
+        - application/xml
+        - application/json
+      parameters:
+        - name: petId
+          in: path
+          description: ID of pet that needs to be updated
+          required: true
+          type: integer
+          format: int64
+        - name: name
+          in: formData
+          description: Updated name of the pet
+          required: false
           type: string
-          description: End state application is the name of the application that is
-            supposed to be active on the pos device once the transaction has been
-            processed.
-          nullable: true
-          deprecated: true
-      additionalProperties: false
-    CancelRequest:
-      required:
-      - deviceToken
-      type: object
-      properties:
-        deviceToken:
-          minLength: 1
+        - name: status
+          in: formData
+          description: Updated status of the pet
+          required: false
           type: string
-          description: The token of a PAX pos device.
-        correlationId:
+      responses:
+        '405':
+          description: Invalid input
+      security:
+        - petstore_auth:
+            - 'write:pets'
+            - 'read:pets'
+    delete:
+      tags:
+        - pet
+      summary: Deletes a pet
+      description: ''
+      operationId: deletePet
+      produces:
+        - application/xml
+        - application/json
+      parameters:
+        - name: api_key
+          in: header
+          required: false
           type: string
-          description: Use the value from the sale/refund that is being cancelled.
-          nullable: true
-      additionalProperties: false
-    CompletionRequest:
-      required:
-      - amount
-      - authCode
-      - callbackUrl
-      - cardLength
-      - deviceToken
-      - panFirstSix
-      - panLastFour
-      - stan
-      type: object
-      properties:
-        panFirstSix:
-          minLength: 1
+        - name: petId
+          in: path
+          description: Pet id to delete
+          required: true
+          type: integer
+          format: int64
+      responses:
+        '400':
+          description: Invalid pet value
+      security:
+        - petstore_auth:
+            - 'write:pets'
+            - 'read:pets'
+  '/pet/{petId}/uploadImage':
+    post:
+      tags:
+        - pet
+      summary: uploads an image
+      description: ''
+      operationId: uploadFile
+      consumes:
+        - multipart/form-data
+      produces:
+        - application/json
+      parameters:
+        - name: petId
+          in: path
+          description: ID of pet to update
+          required: true
+          type: integer
+          format: int64
+        - name: additionalMetadata
+          in: formData
+          description: Additional data to pass to server
+          required: false
           type: string
-          description: "First six letters of PAN from response e.g. 123456******7890\
-            \ input: \"123456\""
-        panLastFour:
-          minLength: 1
+        - name: file
+          in: formData
+          description: file to upload
+          required: false
+          type: file
+      responses:
+        '200':
+          description: successful operation
+          schema:
+            $ref: '#/definitions/ApiResponse'
+      security:
+        - petstore_auth:
+            - 'write:pets'
+            - 'read:pets'
+  /store/inventory:
+    get:
+      tags:
+        - store
+      summary: Returns pet inventories by status
+      description: Returns a map of status codes to quantities
+      operationId: getInventory
+      produces:
+        - application/json
+      parameters: []
+      responses:
+        '200':
+          description: successful operation
+          schema:
+            type: object
+            additionalProperties:
+              type: integer
+              format: int32
+      security:
+        - api_key: []
+  /store/order:
+    post:
+      tags:
+        - store
+      summary: Place an order for a pet
+      description: ''
+      operationId: placeOrder
+      produces:
+        - application/xml
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          description: order placed for purchasing the pet
+          required: true
+          schema:
+            $ref: '#/definitions/Order'
+      responses:
+        '200':
+          description: successful operation
+          schema:
+            $ref: '#/definitions/Order'
+        '400':
+          description: Invalid Order
+  '/store/order/{orderId}':
+    get:
+      tags:
+        - store
+      summary: Find purchase order by ID
+      description: 'For valid response try integer IDs with value <= 5 or > 10. Other values will generate exceptions'
+      operationId: getOrderById
+      produces:
+        - application/xml
+        - application/json
+      parameters:
+        - name: orderId
+          in: path
+          description: ID of pet that needs to be fetched
+          required: true
+          type: integer
+          maximum: 5
+          minimum: 1
+          format: int64
+      responses:
+        '200':
+          description: successful operation
+          schema:
+            $ref: '#/definitions/Order'
+        '400':
+          description: Invalid ID supplied
+        '404':
+          description: Order not found
+    delete:
+      tags:
+        - store
+      summary: Delete purchase order by ID
+      description: For valid response try integer IDs with value < 1000. Anything above 1000 or nonintegers will generate API errors
+      operationId: deleteOrder
+      produces:
+        - application/xml
+        - application/json
+      parameters:
+        - name: orderId
+          in: path
+          description: ID of the order that needs to be deleted
+          required: true
           type: string
-          description: "Last four letters of PAN from response e.g. 123456******7890\
-            \ input: \"7890\""
-        authCode:
-          minLength: 1
+      responses:
+        '400':
+          description: Invalid ID supplied
+        '404':
+          description: Order not found
+  /user:
+    post:
+      tags:
+        - user
+      summary: Create user
+      description: This can only be done by the logged in user.
+      operationId: createUser
+      produces:
+        - application/xml
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          description: Created user object
+          required: true
+          schema:
+            $ref: '#/definitions/User'
+      responses:
+        default:
+          description: successful operation
+  /user/createWithArray:
+    post:
+      tags:
+        - user
+      summary: Creates list of users with given input array
+      description: ''
+      operationId: createUsersWithArrayInput
+      produces:
+        - application/xml
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          description: List of user object
+          required: true
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/User'
+      responses:
+        default:
+          description: successful operation
+  /user/createWithList:
+    post:
+      tags:
+        - user
+      summary: Creates list of users with given input array
+      description: ''
+      operationId: createUsersWithListInput
+      produces:
+        - application/xml
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          description: List of user object
+          required: true
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/User'
+      responses:
+        default:
+          description: successful operation
+  /user/login:
+    get:
+      tags:
+        - user
+      summary: Logs user into the system
+      description: ''
+      operationId: loginUser
+      produces:
+        - application/xml
+        - application/json
+      parameters:
+        - name: username
+          in: query
+          description: The user name for login
+          required: true
           type: string
-          description: Input authCode from original transaction
-        stan:
-          minLength: 1
+        - name: password
+          in: query
+          description: The password for login in clear text
+          required: true
           type: string
-          description: Input Stan from original transaction
-        cardLength:
-          minLength: 1
-          type: string
-          description: "Input length of card e.g. 123456******7890 input: \"16\""
-        amount:
-          minLength: 1
-          type: string
-          description: "The amount represented with two minor units, e.g. 12 EUR is\
-            \ 1200."
-        disablePrinting:
-          type: boolean
-          description: Should the terminal print a receipt
-        referenceId:
-          type: string
-          description: Optional reference from merchants
-          nullable: true
-        language:
-          $ref: '#/components/schemas/Language'
-        voucherCode:
-          type: string
-          description: "A Mastercard voucher code is a unique alphanumeric code that\
-            \ can be used to redeem a specific value or discount on purchases made\
-            \ with a Mastercard, typically provided as part of a promotion or reward\
-            \ program."
-          nullable: true
-        whitelistAids:
-          type: array
-          description: "Specify the AIDs that are allowed to be used in the transaction,\
-            \ terminal config needs a predefined list of AIDs to be able to use this\
-            \ feature."
-          nullable: true
-          items:
+      responses:
+        '200':
+          description: successful operation
+          schema:
             type: string
-        whitelistBins:
-          type: array
-          description: "Specify the BINs that are allowed to be used in the transaction,\
-            \ terminal config needs a predefined list of BINs to be able to use this\
-            \ feature."
-          nullable: true
-          items:
-            type: string
-        callbackUrl:
-          minLength: 1
-          type: string
-          description: The URL that CloudLinkApi will use to return information to
-            the caller.
-        deviceToken:
-          minLength: 1
-          type: string
-          description: The token of a PAX pos device.
-        correlationId:
-          type: string
-          description: "An id provided by the caller. Will be returned in the callback\
-            \ for message matching.\r\nIn a cancel request, use the value from the\
-            \ sale/refund that is being cancelled."
-          nullable: true
-        timeToLive:
-          type: integer
-          description: "If the request has not reached the PAX POS device within this\
-            \ time, the request will be deleted and no reversal action is required\
-            \ by the caller. If not set the default value is 5 seconds."
-          format: int32
-        endStateApplication:
-          type: string
-          description: End state application is the name of the application that is
-            supposed to be active on the pos device once the transaction has been
-            processed.
-          nullable: true
-          deprecated: true
-      additionalProperties: false
-    CompletionRequestUsingPoll:
-      required:
-      - amount
-      - authCode
-      - cardLength
-      - deviceToken
-      - panFirstSix
-      - panLastFour
-      - pollId
-      - stan
-      type: object
-      properties:
-        panFirstSix:
-          minLength: 1
-          type: string
-          description: "First six letters of PAN from response e.g. 123456******7890\
-            \ input: \"123456\""
-        panLastFour:
-          minLength: 1
-          type: string
-          description: "Last four letters of PAN from response e.g. 123456******7890\
-            \ input: \"7890\""
-        authCode:
-          minLength: 1
-          type: string
-          description: Input authCode from original transaction
-        stan:
-          minLength: 1
-          type: string
-          description: Input Stan from original transaction
-        cardLength:
-          minLength: 1
-          type: string
-          description: "Input length of card e.g. 123456******7890 input: \"16\""
-        amount:
-          minLength: 1
-          type: string
-          description: "The amount represented with two minor units, e.g. 12 EUR is\
-            \ 1200."
-        disablePrinting:
-          type: boolean
-          description: Should the terminal print a receipt
-        referenceId:
-          type: string
-          description: Optional reference from merchants
-          nullable: true
-        language:
-          $ref: '#/components/schemas/Language'
-        pollId:
-          type: string
-          description: The id used to poll after a terminal response
-          format: uuid
-        deviceToken:
-          minLength: 1
-          type: string
-          description: The token of a PAX pos device.
-        correlationId:
-          type: string
-          description: "An id provided by the caller. Will be returned in the callback\
-            \ for message matching.\r\nIn a cancel request, use the value from the\
-            \ sale/refund that is being cancelled."
-          nullable: true
-        timeToLive:
-          type: integer
-          description: "If the request has not reached the PAX POS device within this\
-            \ time, the request will be deleted and no reversal action is required\
-            \ by the caller. If not set the default value is 5 seconds."
-          format: int32
-        endStateApplication:
-          type: string
-          description: End state application is the name of the application that is
-            supposed to be active on the pos device once the transaction has been
-            processed.
-          nullable: true
-          deprecated: true
-      additionalProperties: false
-    ConfirmationRequest:
-      type: object
-      properties:
-        deviceToken:
-          type: string
-          description: The token of a PAX pos device.
-          nullable: true
-        uti:
-          type: string
-          description: An id provided by the POS in a sale response. Used for message
-            matching in a re-print.
-          nullable: true
-      additionalProperties: false
-    Language:
-      type: string
-      description: The language that the PAX pos will use to display information on
-        the device.
-      enum:
-      - en_GB
-      - ar_EG
-      - da_DK
-      - de_DE
-      - es_ES
-      - fi_FI
-      - fr_FR
-      - hi_IN
-      - is_IS
-      - nb_NO
-      - nl_NL
-      - pl_PL
-      - pt_PT
-      - ru_RU
-      - sl_SI
-      - sv_SE
-      - zh_CN
-      - it_IT
-    PrintOnCommand:
-      required:
-      - deviceToken
-      - message
-      type: object
-      properties:
-        deviceToken:
-          minLength: 1
-          type: string
-          description: The token of a PAX pos device.
-        message:
-          minLength: 1
-          type: string
-          description: "Text to print.\r\nFor example, this could be a previous receipt\
-            \ received from the POS after a sale."
-      additionalProperties: false
-    ProblemDetails:
-      type: object
-      properties:
-        type:
-          type: string
-          nullable: true
-        title:
-          type: string
-          nullable: true
-        status:
-          type: integer
-          format: int32
-          nullable: true
-        detail:
-          type: string
-          nullable: true
-        instance:
-          type: string
-          nullable: true
-      additionalProperties: {}
-    ReceiptType:
-      type: string
-      enum:
-      - NONE
-      - CARDHOLDER_RECEIPT
-      - MERCHANT_RECEIPT
-    Register:
-      required:
-      - pairingCallback
-      - serialNumber
-      type: object
-      properties:
-        serialNumber:
-          minLength: 10
-          type: string
-          description: The PAX device serial number.
-        pairingCallback:
-          minLength: 1
-          type: string
-          description: The callback url for Cloudlink to call when the PAX device
-            pair's against Cloudlink.
-      additionalProperties: false
-    RegisterUsingPoll:
-      required:
-      - serialNumber
-      type: object
-      properties:
-        serialNumber:
-          minLength: 10
-          type: string
-          description: The PAX device serial number.
-      additionalProperties: false
-    Reprint:
-      required:
-      - callbackUrl
-      - deviceToken
-      - uti
-      type: object
-      properties:
-        receiptType:
-          $ref: '#/components/schemas/ReceiptType'
-        uti:
-          minLength: 1
-          type: string
-          description: An id provided by the POS in a sale response. Used for message
-            matching in a re-print.
-        callbackUrl:
-          minLength: 1
-          type: string
-          description: The URL that CloudLinkApi will use to return information to
-            the caller.
-        deviceToken:
-          minLength: 1
-          type: string
-          description: The token of a PAX pos device.
-        correlationId:
-          type: string
-          description: "An id provided by the caller. Will be returned in the callback\
-            \ for message matching.\r\nIn a cancel request, use the value from the\
-            \ sale/refund that is being cancelled."
-          nullable: true
-        timeToLive:
-          type: integer
-          description: "If the request has not reached the PAX POS device within this\
-            \ time, the request will be deleted and no reversal action is required\
-            \ by the caller. If not set the default value is 5 seconds."
-          format: int32
-        endStateApplication:
-          type: string
-          description: End state application is the name of the application that is
-            supposed to be active on the pos device once the transaction has been
-            processed.
-          nullable: true
-          deprecated: true
-      additionalProperties: false
-    ReprintUsingPoll:
-      required:
-      - deviceToken
-      - pollId
-      - uti
-      type: object
-      properties:
-        receiptType:
-          $ref: '#/components/schemas/ReceiptType'
-        uti:
-          minLength: 1
-          type: string
-          description: An id provided by the POS in a sale response. Used for message
-            matching in a re-print.
-        pollId:
-          type: string
-          description: The id used to poll after a terminal response
-          format: uuid
-        deviceToken:
-          minLength: 1
-          type: string
-          description: The token of a PAX pos device.
-        correlationId:
-          type: string
-          description: "An id provided by the caller. Will be returned in the callback\
-            \ for message matching.\r\nIn a cancel request, use the value from the\
-            \ sale/refund that is being cancelled."
-          nullable: true
-        timeToLive:
-          type: integer
-          description: "If the request has not reached the PAX POS device within this\
-            \ time, the request will be deleted and no reversal action is required\
-            \ by the caller. If not set the default value is 5 seconds."
-          format: int32
-        endStateApplication:
-          type: string
-          description: End state application is the name of the application that is
-            supposed to be active on the pos device once the transaction has been
-            processed.
-          nullable: true
-          deprecated: true
-      additionalProperties: false
-    Request:
-      required:
-      - amount
-      - callbackUrl
-      - deviceToken
-      type: object
-      properties:
-        amount:
-          minLength: 1
-          type: string
-          description: "The amount represented with two minor units, e.g. 12 EUR is\
-            \ 1200."
-        disablePrinting:
-          type: boolean
-          description: Should the terminal print a receipt
-        referenceId:
-          type: string
-          description: Optional reference from merchants
-          nullable: true
-        language:
-          $ref: '#/components/schemas/Language'
-        voucherCode:
-          type: string
-          description: "A Mastercard voucher code is a unique alphanumeric code that\
-            \ can be used to redeem a specific value or discount on purchases made\
-            \ with a Mastercard, typically provided as part of a promotion or reward\
-            \ program."
-          nullable: true
-        whitelistAids:
-          type: array
-          description: "Specify the AIDs that are allowed to be used in the transaction,\
-            \ terminal config needs a predefined list of AIDs to be able to use this\
-            \ feature."
-          nullable: true
-          items:
-            type: string
-        whitelistBins:
-          type: array
-          description: "Specify the BINs that are allowed to be used in the transaction,\
-            \ terminal config needs a predefined list of BINs to be able to use this\
-            \ feature."
-          nullable: true
-          items:
-            type: string
-        callbackUrl:
-          minLength: 1
-          type: string
-          description: The URL that CloudLinkApi will use to return information to
-            the caller.
-        deviceToken:
-          minLength: 1
-          type: string
-          description: The token of a PAX pos device.
-        correlationId:
-          type: string
-          description: "An id provided by the caller. Will be returned in the callback\
-            \ for message matching.\r\nIn a cancel request, use the value from the\
-            \ sale/refund that is being cancelled."
-          nullable: true
-        timeToLive:
-          type: integer
-          description: "If the request has not reached the PAX POS device within this\
-            \ time, the request will be deleted and no reversal action is required\
-            \ by the caller. If not set the default value is 5 seconds."
-          format: int32
-        endStateApplication:
-          type: string
-          description: End state application is the name of the application that is
-            supposed to be active on the pos device once the transaction has been
-            processed.
-          nullable: true
-          deprecated: true
-      additionalProperties: false
-    RequestUsingPoll:
-      required:
-      - amount
-      - deviceToken
-      - pollId
-      type: object
-      properties:
-        amount:
-          minLength: 1
-          type: string
-          description: "The amount represented with two minor units, e.g. 12 EUR is\
-            \ 1200."
-        disablePrinting:
-          type: boolean
-          description: Should the terminal print a receipt
-        referenceId:
-          type: string
-          description: Optional reference from merchants
-          nullable: true
-        language:
-          $ref: '#/components/schemas/Language'
-        pollId:
-          type: string
-          description: The id used to poll after a terminal response
-          format: uuid
-        deviceToken:
-          minLength: 1
-          type: string
-          description: The token of a PAX pos device.
-        correlationId:
-          type: string
-          description: "An id provided by the caller. Will be returned in the callback\
-            \ for message matching.\r\nIn a cancel request, use the value from the\
-            \ sale/refund that is being cancelled."
-          nullable: true
-        timeToLive:
-          type: integer
-          description: "If the request has not reached the PAX POS device within this\
-            \ time, the request will be deleted and no reversal action is required\
-            \ by the caller. If not set the default value is 5 seconds."
-          format: int32
-        endStateApplication:
-          type: string
-          description: End state application is the name of the application that is
-            supposed to be active on the pos device once the transaction has been
-            processed.
-          nullable: true
-          deprecated: true
-      additionalProperties: false
-    UnauthorizedResponse:
-      type: object
-      properties:
-        message:
-          type: string
-          nullable: true
-      additionalProperties: false
-    VoidRequest:
-      required:
-      - amount
-      - callbackUrl
-      - deviceToken
-      - uti
-      type: object
-      properties:
-        uti:
-          minLength: 1
-          type: string
-          description: An id provided by the POS in a sale response. Used for message
-            matching in a re-print.
-        amount:
-          minLength: 1
-          type: string
-          description: "The amount represented with two minor units, e.g. 12 EUR is\
-            \ 1200."
-        disablePrinting:
-          type: boolean
-          description: Should the terminal print a receipt
-        referenceId:
-          type: string
-          description: Optional reference from merchants
-          nullable: true
-        language:
-          $ref: '#/components/schemas/Language'
-        voucherCode:
-          type: string
-          description: "A Mastercard voucher code is a unique alphanumeric code that\
-            \ can be used to redeem a specific value or discount on purchases made\
-            \ with a Mastercard, typically provided as part of a promotion or reward\
-            \ program."
-          nullable: true
-        whitelistAids:
-          type: array
-          description: "Specify the AIDs that are allowed to be used in the transaction,\
-            \ terminal config needs a predefined list of AIDs to be able to use this\
-            \ feature."
-          nullable: true
-          items:
-            type: string
-        whitelistBins:
-          type: array
-          description: "Specify the BINs that are allowed to be used in the transaction,\
-            \ terminal config needs a predefined list of BINs to be able to use this\
-            \ feature."
-          nullable: true
-          items:
-            type: string
-        callbackUrl:
-          minLength: 1
-          type: string
-          description: The URL that CloudLinkApi will use to return information to
-            the caller.
-        deviceToken:
-          minLength: 1
-          type: string
-          description: The token of a PAX pos device.
-        correlationId:
-          type: string
-          description: "An id provided by the caller. Will be returned in the callback\
-            \ for message matching.\r\nIn a cancel request, use the value from the\
-            \ sale/refund that is being cancelled."
-          nullable: true
-        timeToLive:
-          type: integer
-          description: "If the request has not reached the PAX POS device within this\
-            \ time, the request will be deleted and no reversal action is required\
-            \ by the caller. If not set the default value is 5 seconds."
-          format: int32
-        endStateApplication:
-          type: string
-          description: End state application is the name of the application that is
-            supposed to be active on the pos device once the transaction has been
-            processed.
-          nullable: true
-          deprecated: true
-      additionalProperties: false
-    VoidRequestUsingPoll:
-      required:
-      - amount
-      - deviceToken
-      - pollId
-      - uti
-      type: object
-      properties:
-        uti:
-          minLength: 1
-          type: string
-          description: An id provided by the POS in a sale response. Used for message
-            matching in a void request.
-        amount:
-          minLength: 1
-          type: string
-          description: "The amount represented with two minor units, e.g. 12 EUR is\
-            \ 1200."
-        disablePrinting:
-          type: boolean
-          description: Should the terminal print a receipt
-        referenceId:
-          type: string
-          description: Optional reference from merchants
-          nullable: true
-        language:
-          $ref: '#/components/schemas/Language'
-        pollId:
-          type: string
-          description: The id used to poll after a terminal response
-          format: uuid
-        deviceToken:
-          minLength: 1
-          type: string
-          description: The token of a PAX pos device.
-        correlationId:
-          type: string
-          description: "An id provided by the caller. Will be returned in the callback\
-            \ for message matching.\r\nIn a cancel request, use the value from the\
-            \ sale/refund that is being cancelled."
-          nullable: true
-        timeToLive:
-          type: integer
-          description: "If the request has not reached the PAX POS device within this\
-            \ time, the request will be deleted and no reversal action is required\
-            \ by the caller. If not set the default value is 5 seconds."
-          format: int32
-        endStateApplication:
-          type: string
-          description: End state application is the name of the application that is
-            supposed to be active on the pos device once the transaction has been
-            processed.
-          nullable: true
-          deprecated: true
-      additionalProperties: false
-  securitySchemes:
-    ApiKey:
-      type: apiKey
-      description: ApiKey authentication
-      name: X-API-KEY
-      in: header
+          headers:
+            X-Rate-Limit:
+              type: integer
+              format: int32
+              description: calls per hour allowed by the user
+            X-Expires-After:
+              type: string
+              format: date-time
+              description: date in UTC when token expires
+        '400':
+          description: Invalid username/password supplied
+  /user/logout:
+    get:
+      tags:
+        - user
+      summary: Logs out current logged in user session
+      description: ''
+      operationId: logoutUser
+      produces:
+        - application/xml
+        - application/json
+      parameters: []
+      responses:
+        default:
+          description: successful operation
+  '/user/{username}':
+    get:
+      tags:
+        - user
+      summary: Get user by user name
+      description: ''
+      operationId: getUserByName
+      produces:
+        - application/xml
+        - application/json
+      parameters:
+        - name: username
+          in: path
+          description: 'The name that needs to be fetched. Use user1 for testing.'
+          required: true
+          type: string
+      responses:
+        '200':
+          description: successful operation
+          schema:
+            $ref: '#/definitions/User'
+        '400':
+          description: Invalid username supplied
+        '404':
+          description: User not found
+    put:
+      tags:
+        - user
+      summary: Updated user
+      description: This can only be done by the logged in user.
+      operationId: updateUser
+      produces:
+        - application/xml
+        - application/json
+      parameters:
+        - name: username
+          in: path
+          description: name that need to be deleted
+          required: true
+          type: string
+        - in: body
+          name: body
+          description: Updated user object
+          required: true
+          schema:
+            $ref: '#/definitions/User'
+      responses:
+        '400':
+          description: Invalid user supplied
+        '404':
+          description: User not found
+    delete:
+      tags:
+        - user
+      summary: Delete user
+      description: This can only be done by the logged in user.
+      operationId: deleteUser
+      produces:
+        - application/xml
+        - application/json
+      parameters:
+        - name: username
+          in: path
+          description: The name that needs to be deleted
+          required: true
+          type: string
+      responses:
+        '400':
+          description: Invalid username supplied
+        '404':
+          description: User not found
+securityDefinitions:
+  petstore_auth:
+    type: oauth2
+    authorizationUrl: 'http://petstore.swagger.io/api/oauth/dialog'
+    flow: implicit
+    scopes:
+      'write:pets': modify pets in your account
+      'read:pets': read your pets
+  api_key:
+    type: apiKey
+    name: api_key
+    in: header
+definitions:
+  Order:
+    title: Pet Order
+    description: An order for a pets from the pet store
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+      petId:
+        type: integer
+        format: int64
+      quantity:
+        type: integer
+        format: int32
+      shipDate:
+        type: string
+        format: date-time
+      status:
+        type: string
+        description: Order Status
+        enum:
+          - placed
+          - approved
+          - delivered
+      complete:
+        type: boolean
+        default: false
+    xml:
+      name: Order
+  Category:
+    title: Pet category
+    description: A category for a pet
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+      name:
+        type: string
+    xml:
+      name: Category
+  User:
+    title: a User
+    description: A User who is purchasing from the pet store
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+      username:
+        type: string
+      firstName:
+        type: string
+      lastName:
+        type: string
+      email:
+        type: string
+      password:
+        type: string
+      phone:
+        type: string
+      userStatus:
+        type: integer
+        format: int32
+        description: User Status
+    xml:
+      name: User
+  Tag:
+    title: Pet Tag
+    description: A tag for a pet
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+      name:
+        type: string
+    xml:
+      name: Tag
+  Pet:
+    title: a Pet
+    description: A pet for sale in the pet store
+    type: object
+    required:
+      - name
+      - photoUrls
+    properties:
+      id:
+        type: integer
+        format: int64
+      category:
+        $ref: '#/definitions/Category'
+      name:
+        type: string
+        example: doggie
+      photoUrls:
+        type: array
+        xml:
+          name: photoUrl
+          wrapped: true
+        items:
+          type: string
+      tags:
+        type: array
+        xml:
+          name: tag
+          wrapped: true
+        items:
+          $ref: '#/definitions/Tag'
+      status:
+        type: string
+        description: pet status in the store
+        enum:
+          - available
+          - pending
+          - sold
+    xml:
+      name: Pet
+  ApiResponse:
+    title: An uploaded response
+    description: Describes the result of uploading an image resource
+    type: object
+    properties:
+      code:
+        type: integer
+        format: int32
+      type:
+        type: string
+      message:
+        type: string
